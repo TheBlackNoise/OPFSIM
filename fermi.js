@@ -39,12 +39,12 @@ const fermiData = {
 };
 
 // Load Fermi Assets
-fermiData.imageElement.src = "sprites/Fermiidle1.png";
+fermiData.imageElement.src = "Sprites/Fermiidle1.png";
 fermiData.imageElement.onload = function() { fermiData.imageLoaded = true; };
 
 let loadedFermiPortraits = 0;
 for (let i = 0; i < 4; i++) {
-    fermiData.portraitFrames[i].src = `sprites/Fermicloseup${i + 1}.png`;
+    fermiData.portraitFrames[i].src = `Sprites/Fermicloseup${i + 1}.png`;
     fermiData.portraitFrames[i].onload = function() {
         loadedFermiPortraits++;
         if (loadedFermiPortraits === 4) fermiData.portraitLoaded = true;
