@@ -136,7 +136,7 @@ function drawVisualNovelLayer() {
 
     // B. Handle Portrait Frame Flipping (Changes frames every 12 ticks)
     portraitAnimTimer++;
-    if (portraitAnimTimer >= 12) {
+    if (portraitAnimTimer >= 6) {
         portraitFrame = (portraitFrame + 1) % 4;
         portraitAnimTimer = 0;
     }
