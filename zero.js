@@ -64,14 +64,14 @@ const zeroData = {
 };
 
 // Load Zero's Overworld Sprite
-zeroData.imageElement.src = "sprites/Zeroidle1.png"; 
+zeroData.imageElement.src = "Sprites/Zeroidle1.png"; 
 zeroData.imageElement.onload = function() { zeroData.imageLoaded = true; };
 
 // Load Zero's 4 Dialogue Portraits
 let loadedZeroPortraits = 0;
 for (let i = 0; i < 4; i++) {
     zeroData.portraitFrames[i] = new Image();
-    zeroData.portraitFrames[i].src = `sprites/Zerocloseup${i + 1}.png`;
+    zeroData.portraitFrames[i].src = `Sprites/Zerocloseup${i + 1}.png`;
     zeroData.portraitFrames[i].onload = function() {
         loadedZeroPortraits++;
         if (loadedZeroPortraits === 4) zeroData.portraitLoaded = true;
