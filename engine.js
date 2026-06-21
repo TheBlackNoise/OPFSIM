@@ -1,16 +1,40 @@
 // ===============================
-// SINGLE BACKGROUND LOADER SYSTEM
+// ENGINE (MOBILE SAFE VERSION)
 // ===============================
+
 const bgImage = new Image();
 bgImage.src = "Sprites/Background.png";
 let bgLoaded = false;
 
-// Placeholder values to keep old parts of your game loop stable
 let bgOverlayLoaded = false;
 let bgOverlayImage = null;
 
 // ===============================
-// SMART DIALOGUE PARSER
+// STATE
+// ===============================
+let gameState = "simulation";
+
+let fadeAlpha = 0;
+let boxFadeAlpha = 0;
+
+let selectedCharacter = null;
+
+let fullDialogueList = [];
+let currentLineIndex = 0;
+let printedText = "";
+let textCharacterIndex = 0;
+
+let talkingCharacter = null;
+let interactingPartner = null;
+
+let currentSpeakerName = "";
+let cleanSpeechText = "";
+
+let portraitFrame = 0;
+let portraitAnimTimer = 0;
+
+// ===============================
+// DIALOGUE PARSER
 // ===============================
 function parseCurrentDialogueLine() {
     if (!fullDialogueList || fullDialogueList.length === 0) return;
@@ -22,40 +46,63 @@ function parseCurrentDialogueLine() {
         currentSpeakerName = parts[0].toUpperCase().trim();
         cleanSpeechText = parts.slice(1).join(": ");
     } else {
-        if (talkingCharacter) {
-            currentSpeakerName = talkingCharacter.name;
-        } else {
-            currentSpeakerName = "UNKNOWN";
-        }
+        currentSpeakerName = talkingCharacter
+            ? talkingCharacter.name
+            : "UNKNOWN";
         cleanSpeechText = rawLine;
     }
 }
 
 // ===============================
-// DEBUG HELPER (NEW - SAFE ADD)
+// SINGLE CLICK CONTROLLER (IMPORTANT)
 // ===============================
-function safeLoadImage(img, path, label) {
-    img.onload = function () {
-        img.loaded = true;
-    };
-
-    img.onerror = function () {
-        console.warn(`[MISSING ASSET] ${label}: ${path}`);
-    };
-
-    img.src = path;
-}
-
-// ===============================
-// MOUSE CONTROLS
-// ===============================
-canvas.addEventListener("click", function(event) {
-    if (gameState !== "simulation") return;
-
+canvas.addEventListener("click", function (event) {
     const rect = canvas.getBoundingClientRect();
     const mouseX = event.clientX - rect.left;
     const mouseY = event.clientY - rect.top;
 
+    // ===============================
+    // 1. DIALOGUE ALWAYS TAKES PRIORITY
+    // ===============================
+    if (gameState === "dialogue" || gameState === "fade-in") {
+
+        const boxX = 20;
+        const boxY = canvas.height - 110;
+        const boxW = canvas.width - 40;
+        const boxH = 90;
+
+        const insideBox =
+            mouseX >= boxX &&
+            mouseX <= boxX + boxW &&
+            mouseY >= boxY &&
+            mouseY <= boxY + boxH;
+
+        if (!insideBox) return;
+
+        // finish typing instantly
+        if (textCharacterIndex < cleanSpeechText.length) {
+            textCharacterIndex = cleanSpeechText.length;
+            printedText = cleanSpeechText;
+            return;
+        }
+
+        // next line or close
+        currentLineIndex++;
+
+        if (currentLineIndex < fullDialogueList.length) {
+            printedText = "";
+            textCharacterIndex = 0;
+            parseCurrentDialogueLine();
+        } else {
+            gameState = "fade-out";
+        }
+
+        return;
+    }
+
+    // ===============================
+    // 2. CHARACTER DETECTION
+    // ===============================
     let clickedChar = null;
     characters.forEach(char => {
         if (
@@ -83,13 +130,13 @@ canvas.addEventListener("click", function(event) {
     }
 
     // ===============================
-    // FRUIT INTERACTION
+    // 3. FRUIT CLICK
     // ===============================
     if (clickedFruit) {
         if (selectedCharacter) {
             const fruitId = clickedFruit.id.toLowerCase();
 
-            if (selectedCharacter.interactions && selectedCharacter.interactions[fruitId]) {
+            if (selectedCharacter.interactions?.[fruitId]) {
                 gameState = "pathfinding";
                 talkingCharacter = selectedCharacter;
                 interactingPartner = clickedFruit;
@@ -98,7 +145,9 @@ canvas.addEventListener("click", function(event) {
                 gameState = "fade-in";
                 talkingCharacter = selectedCharacter;
                 interactingPartner = null;
-                fullDialogueList = [`${selectedCharacter.name}: It's a Devil Fruit...`];
+                fullDialogueList = [
+                    `${selectedCharacter.name}: It's a Devil Fruit...`
+                ];
             }
         } else {
             gameState = "fade-in";
@@ -123,7 +172,7 @@ canvas.addEventListener("click", function(event) {
     }
 
     // ===============================
-    // CHARACTER INTERACTION
+    // 4. CHARACTER CLICK
     // ===============================
     if (clickedChar) {
 
@@ -135,16 +184,11 @@ canvas.addEventListener("click", function(event) {
             talkingCharacter = clickedChar;
             interactingPartner = null;
 
-            if (clickedChar.dialogueLines && clickedChar.dialogueLines.length > 0) {
-                const randomIndex = Math.floor(Math.random() * clickedChar.dialogueLines.length);
-                let chosenOption = clickedChar.dialogueLines[randomIndex];
+            let chosen = clickedChar.dialogueLines?.[
+                Math.floor(Math.random() * clickedChar.dialogueLines.length)
+            ] || "...";
 
-                fullDialogueList = Array.isArray(chosenOption)
-                    ? chosenOption
-                    : [chosenOption];
-            } else {
-                fullDialogueList = ["..."];
-            }
+            fullDialogueList = Array.isArray(chosen) ? chosen : [chosen];
 
             currentLineIndex = 0;
             printedText = "";
@@ -160,27 +204,14 @@ canvas.addEventListener("click", function(event) {
         if (selectedCharacter && selectedCharacter.id !== clickedChar.id) {
             const targetId = clickedChar.id.toLowerCase();
 
-            if (selectedCharacter.interactions && selectedCharacter.interactions[targetId]) {
+            if (selectedCharacter.interactions?.[targetId]) {
                 let interactionData = selectedCharacter.interactions[targetId];
-                let chosenChat = null;
 
-                if (Array.isArray(interactionData)) {
-                    if (!selectedCharacter._chatCounters) {
-                        selectedCharacter._chatCounters = {};
-                    }
-
-                    if (selectedCharacter._chatCounters[targetId] === undefined) {
-                        selectedCharacter._chatCounters[targetId] = 0;
-                    }
-
-                    let index = selectedCharacter._chatCounters[targetId];
-                    chosenChat = interactionData[index];
-
-                    selectedCharacter._chatCounters[targetId] =
-                        (index + 1) % interactionData.length;
-                } else {
-                    chosenChat = interactionData;
-                }
+                let chosenChat = Array.isArray(interactionData)
+                    ? interactionData[
+                        Math.floor(Math.random() * interactionData.length)
+                      ]
+                    : interactionData;
 
                 gameState = "pathfinding";
                 fadeAlpha = 0;
@@ -211,49 +242,8 @@ canvas.addEventListener("click", function(event) {
     }
 });
 
-// 2. MOBILE + DESKTOP CLICK CONTROLS (Dialogue progression)
-canvas.addEventListener("click", function(event) {
-    if (gameState !== "dialogue") return;
-
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
-
-    // Dialogue box hitbox (matches your drawVisualNovelLayer box)
-    const boxX = 20;
-    const boxY = canvas.height - 110;
-    const boxW = canvas.width - 40;
-    const boxH = 90;
-
-    const insideBox =
-        mouseX >= boxX &&
-        mouseX <= boxX + boxW &&
-        mouseY >= boxY &&
-        mouseY <= boxY + boxH;
-
-    if (!insideBox) return;
-
-    // If text still typing → instantly finish it
-    if (textCharacterIndex < cleanSpeechText.length) {
-        textCharacterIndex = cleanSpeechText.length;
-        printedText = cleanSpeechText;
-        return;
-    }
-
-    // Otherwise go next line or close
-    currentLineIndex++;
-
-    if (currentLineIndex < fullDialogueList.length) {
-        printedText = "";
-        textCharacterIndex = 0;
-        parseCurrentDialogueLine();
-    } else {
-        gameState = "fade-out";
-    }
-});
-
 // ===============================
-// BACKGROUND RENDER
+// BACKGROUND
 // ===============================
 function drawBackground() {
     if (bgLoaded) {
@@ -265,61 +255,38 @@ function drawBackground() {
 }
 
 // ===============================
-// PORTRAIT RENDER
+// PORTRAITS
 // ===============================
-function drawPortraitElement(char, positionMode) {
+function drawPortraitElement(char, mode) {
     if (!char) return;
 
     const isSpeaking =
-        (currentSpeakerName === char.name ||
-         currentSpeakerName === char.id.toUpperCase() ||
-         rawSpeakerCheck(char));
+        currentSpeakerName === char.name ||
+        currentSpeakerName === char.id?.toUpperCase();
 
-    let drawX = 0;
-    const drawY = canvas.height - 490;
+    let x = (mode === "left") ? -40 :
+            (mode === "right") ? canvas.width - 360 :
+            (canvas.width / 2) - 200;
 
-    if (positionMode === "left") drawX = -40;
-    else if (positionMode === "right") drawX = canvas.width - 360;
-    else drawX = (canvas.width / 2) - 200;
+    const y = canvas.height - 490;
 
     ctx.globalAlpha = fadeAlpha * (isSpeaking ? 1 : 0.4);
-
     ctx.save();
 
     if (char.portraitLoaded) {
-        let frame = (Array.isArray(char.portraitFrames) && char.portraitFrames.length)
-            ? char.portraitFrames[portraitFrame]
-            : char.portraitFrames;
+        let frame = char.portraitFrames?.[portraitFrame];
 
-        if (positionMode === "right") {
-            ctx.translate(drawX + 400, drawY);
+        if (mode === "right") {
+            ctx.translate(x + 400, y);
             ctx.scale(-1, 1);
             ctx.drawImage(frame, 0, 0, 400, 400);
         } else {
-            ctx.drawImage(frame, drawX, drawY, 400, 400);
+            ctx.drawImage(frame, x, y, 400, 400);
         }
-    } else {
-        ctx.fillStyle = char.color || "#ffffff";
-        ctx.fillRect(drawX + 125, drawY + 125, 150, 150);
     }
 
     ctx.restore();
     ctx.globalAlpha = 1;
-}
-
-// ===============================
-// SPEAKER CHECK
-// ===============================
-function rawSpeakerCheck(char) {
-    if (!currentSpeakerName) return false;
-    return char.name.toUpperCase().startsWith(currentSpeakerName);
-}
-
-// ===============================
-// FADE STATE
-// ===============================
-if (typeof boxFadeAlpha === "undefined") {
-    var boxFadeAlpha = 0;
 }
 
 // ===============================
@@ -329,17 +296,11 @@ function drawVisualNovelLayer() {
     if (gameState === "simulation" || gameState === "pathfinding") return;
 
     if (gameState === "fade-in") {
-        boxFadeAlpha += 0.05;
-        if (boxFadeAlpha >= 1) {
-            boxFadeAlpha = 1;
-            fadeAlpha += 0.05;
+        boxFadeAlpha = Math.min(1, boxFadeAlpha + 0.05);
+        fadeAlpha = Math.min(1, fadeAlpha + 0.05);
 
-            if (fadeAlpha >= 1) {
-                fadeAlpha = 1;
-                gameState = "dialogue";
-                portraitFrame = 0;
-                portraitAnimTimer = 0;
-            }
+        if (fadeAlpha >= 1) {
+            gameState = "dialogue";
         }
     }
 
@@ -347,16 +308,11 @@ function drawVisualNovelLayer() {
         fadeAlpha -= 0.08;
 
         if (fadeAlpha <= 0) {
-            fadeAlpha = 0;
-            boxFadeAlpha -= 0.05;
-
-            if (boxFadeAlpha <= 0) {
-                boxFadeAlpha = 0;
-                gameState = "simulation";
-                talkingCharacter = null;
-                interactingPartner = null;
-                return;
-            }
+            boxFadeAlpha = 0;
+            gameState = "simulation";
+            talkingCharacter = null;
+            interactingPartner = null;
+            return;
         }
     }
 
@@ -365,8 +321,13 @@ function drawVisualNovelLayer() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     if (gameState === "dialogue") {
+        if (textCharacterIndex < cleanSpeechText.length) {
+            textCharacterIndex++;
+            printedText = cleanSpeechText.substring(0, textCharacterIndex);
+        }
+
         portraitAnimTimer++;
-        if (portraitAnimTimer >= 12) {
+        if (portraitAnimTimer > 12) {
             portraitFrame = (portraitFrame + 1) % 4;
             portraitAnimTimer = 0;
         }
@@ -381,174 +342,30 @@ function drawVisualNovelLayer() {
         drawPortraitElement(talkingCharacter, "center");
     }
 
-    let headerColor = "#ffffff";
-    let activeSpeakerTitle = "";
-    let activeSpeakerVibeName = "";
-
-    characters.forEach(char => {
-        if (
-            currentSpeakerName === char.name ||
-            currentSpeakerName === char.id.toUpperCase()
-        ) {
-            if (char.nameColor) headerColor = char.nameColor;
-            if (char.vibeTitle) activeSpeakerTitle = char.vibeTitle;
-            if (char.vibeName) activeSpeakerVibeName = char.vibeName;
-        }
-    });
-
-    ctx.globalAlpha = boxFadeAlpha;
-
-    ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(255,255,255,0.15)";
-    ctx.font = "italic 12px sans-serif";
-    ctx.fillText(activeSpeakerTitle, canvas.width - 150, canvas.height - 144);
-
-    ctx.font = "bold 24px sans-serif";
-    ctx.fillText(activeSpeakerVibeName, canvas.width - 150, canvas.height - 118);
-
-    ctx.fillStyle = "#1e272e";
-    ctx.fillRect(20, canvas.height - 110, canvas.width - 40, 90);
-
-    ctx.strokeStyle = "#dcdde1";
-    ctx.lineWidth = 4;
-    ctx.strokeRect(22, canvas.height - 108, canvas.width - 44, 86);
-
-    if (gameState === "dialogue") {
-        if (textCharacterIndex < cleanSpeechText.length) {
-            textCharacterIndex++;
-            printedText = cleanSpeechText.substring(0, textCharacterIndex);
-        }
-    }
-
-    ctx.textAlign = "left";
-    ctx.fillStyle = headerColor;
-    ctx.font = "bold 16px sans-serif";
-    ctx.fillText(currentSpeakerName, 40, canvas.height - 82);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "16px sans-serif";
-    ctx.fillText(printedText, 40, canvas.height - 52);
-
-    ctx.fillStyle = "#718093";
-    ctx.font = "11px sans-serif";
-    ctx.textAlign = "right";
-    ctx.fillText("[SPACE] Continue / [X] Close", canvas.width - 40, canvas.height - 35);
-
     ctx.globalAlpha = 1;
 }
 
 // ===============================
-// CHARACTER UPDATE
-// ===============================
-function updateCharacter(char) {
-    if (gameState === "pathfinding") {
-        if (talkingCharacter && interactingPartner) {
-            if (char.id === talkingCharacter.id) {
-                let targetX = interactingPartner.x;
-                targetX += (talkingCharacter.x < interactingPartner.x) ? -48 : 48;
-
-                if (Math.abs(char.x - targetX) > 4) {
-                    char.state = "walking";
-                    char.moveX = char.x < targetX ? 1 : -1;
-                    char.x += char.moveX * char.speed * 2;
-                } else {
-                    char.x = targetX;
-                    char.state = "idle";
-                    gameState = "fade-in";
-                }
-            }
-
-            if (char.id === interactingPartner.id) {
-                char.state = "idle";
-            }
-            return;
-        }
-    }
-
-    if (gameState !== "simulation") return;
-
-    char.timer--;
-
-    if (char.timer <= 0) {
-        if (Math.random() < char.activityLevel) {
-            char.state = "walking";
-            char.moveX = Math.random() < 0.5 ? -1 : 1;
-            char.moveY = 0;
-            char.timer = Math.floor(Math.random() * 120) + 60;
-        } else {
-            char.state = "idle";
-            char.moveX = 0;
-            char.moveY = 0;
-            char.timer = Math.floor(Math.random() * 180) + 120;
-        }
-    }
-
-    char.x += char.moveX * char.speed;
-
-    if (char.state === "walking") {
-        if (Math.random() < 0.08) {
-            char.moveY = (Math.random() * 2 - 1) * 0.2;
-        }
-        char.y += char.moveY;
-    }
-
-    const minY = 263;
-    const maxY = 268;
-
-    if (char.y + char.height < minY) char.y = minY - char.height;
-    if (char.y + char.height > maxY) char.y = maxY - char.height;
-
-    if (char.x < 0) char.x = 0;
-    if (char.x + char.width > canvas.width)
-        char.x = canvas.width - char.width;
-}
-
-// ===============================
-// GAME LOOP
+// LOOP
 // ===============================
 function gameLoop() {
     drawBackground();
 
     if (typeof fruits !== "undefined") {
-        fruits.forEach(fruit => {
-            if (fruit.imageLoaded) {
-                ctx.drawImage(fruit.imageElement, Math.round(fruit.x), Math.round(fruit.y), fruit.width, fruit.height);
+        fruits.forEach(f => {
+            if (f.imageLoaded) {
+                ctx.drawImage(f.imageElement, f.x, f.y, f.width, f.height);
             }
         });
     }
 
-    characters.forEach(char => {
-        updateCharacter(char);
-
-        if (char.imageLoaded) {
-            ctx.save();
-
-            if (char.moveX === -1) {
-                ctx.translate(Math.round(char.x) + char.width, Math.round(char.y));
-                ctx.scale(-1, 1);
-                ctx.drawImage(char.imageElement, 0, 0, char.width, char.height);
-            } else {
-                ctx.drawImage(char.imageElement, Math.round(char.x), Math.round(char.y), char.width, char.height);
-            }
-
-            ctx.restore();
-        }
-
-        if (selectedCharacter && selectedCharacter.id === char.id) {
-            ctx.strokeStyle = "#61DE2A";
-            ctx.lineWidth = 3;
-            ctx.strokeRect(Math.round(char.x) - 2, Math.round(char.y) - 2, char.width + 4, char.height + 4);
-        }
-    });
+    characters.forEach(c => updateCharacter(c));
 
     drawVisualNovelLayer();
     requestAnimationFrame(gameLoop);
 }
 
-// ===============================
-// BOOT
-// ===============================
-window.addEventListener("load", function () {
+window.addEventListener("load", () => {
     bgLoaded = true;
     gameLoop();
 });
