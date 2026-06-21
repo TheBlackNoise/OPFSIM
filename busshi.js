@@ -16,13 +16,27 @@ const busshiData = {
         "Previous User, Unknown.",
         "Current User, Vincam Zero."
     ],
-    
+
+    // What each character says when THEY examine this fruit
+characterDialogue: {
+    zero: [
+        "ZERO: Everything.",
+        "ZERO: Everywhere.",
+        "ZERO: All at once."
+    ],
+
+    fermi: [
+        "FERMI: What an abhorrent ability.",
+        "FERMI: It's very nature breeds avaricious rebellion and want.",
+        "FERMI: Chaos must be brought to order, to use it effectively."
+    ]
+},
     imageLoaded: false,
     imageElement: new Image()
 };
 
 // Load the 22x22 pixel art graphic from your Sprites folder
-busshiData.imageElement.src = "Sprites/Busshi.png";
+busshiData.imageElement.src = "Sprites/busshi.png";
 busshiData.imageElement.onload = function() { 
     busshiData.imageLoaded = true; 
 };
