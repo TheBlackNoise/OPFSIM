@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FC Simulation</title>
+    <style>
+        body {
+            background-color: #222;
+            color: white;
+            font-family: sans-serif;
+            text-align: center;
+      }
+        canvas {
+            background-color: #333;
+            border: 4px solid #555;
+            display: block;
+            margin: 20px auto;
+            /* This code stops the browser from blurring pixels */
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>FC Interaction Sim</h1>
+    <p>More Coming Soon!</p>
+    
+    <!-- This is the canvas box where your FC sprites will move -->
+       <canvas id="gameCanvas" width="768" height="400"></canvas>
+
+    <!-- 1. Load basic game window and state settings first -->
+    <script src="config.js"></script>
+
+    <!-- 2. Load your custom character and fruit asset libraries -->
+    <script src="fermi.js"></script>
+    <script src="zero.js"></script>
+    <script src="busshi.js"></script>
+
+    <!-- 3. Process the master roster directories and coordinate math grids -->
+    <script src="characters.js"></script>
+    <script src="fruits.js"></script>
+
+    <!-- 4. Fire up the core rendering graphics loop engines -->
+    <script src="engine.js"></script>
+
+</body>
+</html>
