@@ -85,42 +85,59 @@ canvas.addEventListener("click", function(event) {
     // ===============================
     // FRUIT INTERACTION
     // ===============================
-    if (clickedFruit) {
-        if (selectedCharacter) {
-            const fruitId = clickedFruit.id.toLowerCase();
+  // CASE A: Clicked a Devil Fruit directly
+if (clickedFruit) {
 
-            if (selectedCharacter.interactions && selectedCharacter.interactions[fruitId]) {
-                gameState = "pathfinding";
-                talkingCharacter = selectedCharacter;
-                interactingPartner = clickedFruit;
-                fullDialogueList = selectedCharacter.interactions[fruitId];
-            } else {
-                gameState = "fade-in";
-                talkingCharacter = selectedCharacter;
-                interactingPartner = null;
-                fullDialogueList = [`${selectedCharacter.name}: It's a Devil Fruit...`];
-            }
+    if (selectedCharacter) {
+
+        const characterId = selectedCharacter.id.toLowerCase();
+
+        if (
+            clickedFruit.characterDialogue &&
+            clickedFruit.characterDialogue[characterId]
+        ) {
+
+            gameState = "pathfinding";
+            talkingCharacter = selectedCharacter;
+            interactingPartner = clickedFruit;
+            fullDialogueList = clickedFruit.characterDialogue[characterId];
+
         } else {
+
             gameState = "fade-in";
-            talkingCharacter = {
-                name: clickedFruit.name,
-                nameColor: "#eed202",
-                portraitLoaded: false
-            };
+            talkingCharacter = selectedCharacter;
             interactingPartner = null;
-            fullDialogueList = clickedFruit.dialogueLines;
+
+            fullDialogueList = [
+                `${selectedCharacter.name}: It's a Devil Fruit...`
+            ];
         }
 
-        currentLineIndex = 0;
-        printedText = "";
-        textCharacterIndex = 0;
-        portraitFrame = 0;
-        portraitAnimTimer = 0;
+    } else {
 
-        parseCurrentDialogueLine();
-        selectedCharacter = null;
-        return;
+        gameState = "fade-in";
+
+        talkingCharacter = {
+            name: clickedFruit.name,
+            nameColor: "#eed202",
+            portraitLoaded: false
+        };
+
+        interactingPartner = null;
+        fullDialogueList = clickedFruit.dialogueLines;
     }
+
+    currentLineIndex = 0;
+    printedText = "";
+    textCharacterIndex = 0;
+    portraitFrame = 0;
+    portraitAnimTimer = 0;
+
+    parseCurrentDialogueLine();
+
+    selectedCharacter = null;
+    return;
+}
 
     // ===============================
     // CHARACTER INTERACTION
@@ -260,6 +277,10 @@ function drawBackground() {
 // ===============================
 function drawPortraitElement(char, positionMode) {
     if (!char) return;
+    // Fruits don't have dialogue portraits
+if (!char.portraitFrames && char.width === 22) {
+    return;
+}
 
     const isSpeaking =
         (currentSpeakerName === char.name ||
@@ -357,7 +378,7 @@ function drawVisualNovelLayer() {
 
     if (gameState === "dialogue") {
         portraitAnimTimer++;
-        if (portraitAnimTimer >= 12) {
+        if (portraitAnimTimer >= 6) {
             portraitFrame = (portraitFrame + 1) % 4;
             portraitAnimTimer = 0;
         }
@@ -365,12 +386,28 @@ function drawVisualNovelLayer() {
 
     ctx.globalAlpha = fadeAlpha;
 
-    if (interactingPartner) {
-        drawPortraitElement(talkingCharacter, "left");
-        drawPortraitElement(interactingPartner, "right");
-    } else {
-        drawPortraitElement(talkingCharacter, "center");
-    }
+// Fruit interactions stay centered
+if (
+    interactingPartner &&
+    interactingPartner.width === 22
+) {
+
+    drawPortraitElement(talkingCharacter, "center");
+
+}
+// Character interactions stay left/right
+else if (interactingPartner) {
+
+    drawPortraitElement(talkingCharacter, "left");
+    drawPortraitElement(interactingPartner, "right");
+
+}
+// Solo dialogue
+else {
+
+    drawPortraitElement(talkingCharacter, "center");
+
+}
 
     let headerColor = "#ffffff";
     let activeSpeakerTitle = "";
@@ -441,7 +478,13 @@ function updateCharacter(char) {
                 if (Math.abs(char.x - targetX) > 4) {
                     char.state = "walking";
                     char.moveX = char.x < targetX ? 1 : -1;
-                    char.x += char.moveX * char.speed * 2;
+                    let walkSpeed = 8;
+
+if (interactingPartner && interactingPartner.width === 22) {
+    walkSpeed = 8;
+}
+
+char.x += char.moveX * char.speed * walkSpeed;
                 } else {
                     char.x = targetX;
                     char.state = "idle";
