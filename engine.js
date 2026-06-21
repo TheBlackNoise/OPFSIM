@@ -211,35 +211,44 @@ canvas.addEventListener("click", function(event) {
     }
 });
 
-// ===============================
-// KEYBOARD CONTROLS
-// ===============================
-window.addEventListener("keydown", function(event) {
-    if (event.key === " " || event.key === "x" || event.key === "X") {
-        event.preventDefault();
-    }
+// 2. MOBILE + DESKTOP CLICK CONTROLS (Dialogue progression)
+canvas.addEventListener("click", function(event) {
+    if (gameState !== "dialogue") return;
 
-    if ((event.key === "x" || event.key === "X") &&
-        (gameState === "dialogue" || gameState === "fade-in")) {
-        gameState = "fade-out";
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    // Dialogue box hitbox (matches your drawVisualNovelLayer box)
+    const boxX = 20;
+    const boxY = canvas.height - 110;
+    const boxW = canvas.width - 40;
+    const boxH = 90;
+
+    const insideBox =
+        mouseX >= boxX &&
+        mouseX <= boxX + boxW &&
+        mouseY >= boxY &&
+        mouseY <= boxY + boxH;
+
+    if (!insideBox) return;
+
+    // If text still typing → instantly finish it
+    if (textCharacterIndex < cleanSpeechText.length) {
+        textCharacterIndex = cleanSpeechText.length;
+        printedText = cleanSpeechText;
         return;
     }
 
-    if (event.key === " " && gameState === "dialogue") {
-        if (textCharacterIndex < cleanSpeechText.length) {
-            textCharacterIndex = cleanSpeechText.length;
-            printedText = cleanSpeechText;
-        } else {
-            currentLineIndex++;
+    // Otherwise go next line or close
+    currentLineIndex++;
 
-            if (currentLineIndex < fullDialogueList.length) {
-                printedText = "";
-                textCharacterIndex = 0;
-                parseCurrentDialogueLine();
-            } else {
-                gameState = "fade-out";
-            }
-        }
+    if (currentLineIndex < fullDialogueList.length) {
+        printedText = "";
+        textCharacterIndex = 0;
+        parseCurrentDialogueLine();
+    } else {
+        gameState = "fade-out";
     }
 });
 
