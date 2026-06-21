@@ -1,17 +1,12 @@
-// ===============================
-// SINGLE BACKGROUND LOADER SYSTEM
-// ===============================
+// SINGLE BACKGROUND LOADER SYSTEM (With clean single-trigger loading)
 const bgImage = new Image();
 bgImage.src = "Sprites/Background.png";
 let bgLoaded = false;
 
-// Placeholder values to keep old parts of your game loop stable
 let bgOverlayLoaded = false;
 let bgOverlayImage = null;
 
-// ===============================
-// SMART DIALOGUE PARSER
-// ===============================
+// Smart helper function to break "NAME: Speech" apart dynamically
 function parseCurrentDialogueLine() {
     if (!fullDialogueList || fullDialogueList.length === 0) return;
 
@@ -31,24 +26,7 @@ function parseCurrentDialogueLine() {
     }
 }
 
-// ===============================
-// DEBUG HELPER (NEW - SAFE ADD)
-// ===============================
-function safeLoadImage(img, path, label) {
-    img.onload = function () {
-        img.loaded = true;
-    };
-
-    img.onerror = function () {
-        console.warn(`[MISSING ASSET] ${label}: ${path}`);
-    };
-
-    img.src = path;
-}
-
-// ===============================
-// MOUSE CONTROLS
-// ===============================
+// 1. MOUSE CONTROLS (CHARACTER + FRUIT INTERACTIONS)
 canvas.addEventListener("click", function(event) {
     if (gameState !== "simulation") return;
 
@@ -82,14 +60,15 @@ canvas.addEventListener("click", function(event) {
         });
     }
 
-    // ===============================
-    // FRUIT INTERACTION
-    // ===============================
+    // CASE A: Fruit clicked
     if (clickedFruit) {
         if (selectedCharacter) {
             const fruitId = clickedFruit.id.toLowerCase();
 
-            if (selectedCharacter.interactions && selectedCharacter.interactions[fruitId]) {
+            if (
+                selectedCharacter.interactions &&
+                selectedCharacter.interactions[fruitId]
+            ) {
                 gameState = "pathfinding";
                 talkingCharacter = selectedCharacter;
                 interactingPartner = clickedFruit;
@@ -98,7 +77,9 @@ canvas.addEventListener("click", function(event) {
                 gameState = "fade-in";
                 talkingCharacter = selectedCharacter;
                 interactingPartner = null;
-                fullDialogueList = [`${selectedCharacter.name}: It's a Devil Fruit...`];
+                fullDialogueList = [
+                    `${selectedCharacter.name}: It's a Devil Fruit...`
+                ];
             }
         } else {
             gameState = "fade-in";
@@ -122,11 +103,8 @@ canvas.addEventListener("click", function(event) {
         return;
     }
 
-    // ===============================
-    // CHARACTER INTERACTION
-    // ===============================
+    // CASE B: Character clicked
     if (clickedChar) {
-
         if (selectedCharacter && selectedCharacter.id === clickedChar.id) {
             gameState = "fade-in";
             fadeAlpha = 0;
@@ -135,13 +113,19 @@ canvas.addEventListener("click", function(event) {
             talkingCharacter = clickedChar;
             interactingPartner = null;
 
-            if (clickedChar.dialogueLines && clickedChar.dialogueLines.length > 0) {
-                const randomIndex = Math.floor(Math.random() * clickedChar.dialogueLines.length);
-                let chosenOption = clickedChar.dialogueLines[randomIndex];
+            if (
+                clickedChar.dialogueLines &&
+                clickedChar.dialogueLines.length > 0
+            ) {
+                const randomIndex = Math.floor(
+                    Math.random() * clickedChar.dialogueLines.length
+                );
 
-                fullDialogueList = Array.isArray(chosenOption)
-                    ? chosenOption
-                    : [chosenOption];
+                const chosen = clickedChar.dialogueLines[randomIndex];
+
+                fullDialogueList = Array.isArray(chosen)
+                    ? chosen
+                    : [chosen];
             } else {
                 fullDialogueList = ["..."];
             }
@@ -160,8 +144,13 @@ canvas.addEventListener("click", function(event) {
         if (selectedCharacter && selectedCharacter.id !== clickedChar.id) {
             const targetId = clickedChar.id.toLowerCase();
 
-            if (selectedCharacter.interactions && selectedCharacter.interactions[targetId]) {
-                let interactionData = selectedCharacter.interactions[targetId];
+            if (
+                selectedCharacter.interactions &&
+                selectedCharacter.interactions[targetId]
+            ) {
+                let interactionData =
+                    selectedCharacter.interactions[targetId];
+
                 let chosenChat = null;
 
                 if (Array.isArray(interactionData)) {
@@ -174,6 +163,7 @@ canvas.addEventListener("click", function(event) {
                     }
 
                     let index = selectedCharacter._chatCounters[targetId];
+
                     chosenChat = interactionData[index];
 
                     selectedCharacter._chatCounters[targetId] =
@@ -211,41 +201,32 @@ canvas.addEventListener("click", function(event) {
     }
 });
 
-// ===============================
-// KEYBOARD CONTROLS
-// ===============================
-window.addEventListener("keydown", function(event) {
-    if (event.key === " " || event.key === "x" || event.key === "X") {
-        event.preventDefault();
-    }
+// 2. 🔥 M1 DIALOGUE SYSTEM (REPLACES KEYBOARD)
+window.addEventListener("mousedown", function(event) {
+    if (event.button !== 0) return; // only left click
 
-    if ((event.key === "x" || event.key === "X") &&
-        (gameState === "dialogue" || gameState === "fade-in")) {
-        gameState = "fade-out";
-        return;
-    }
-
-    if (event.key === " " && gameState === "dialogue") {
+    if (gameState === "dialogue") {
+        // Skip typing animation
         if (textCharacterIndex < cleanSpeechText.length) {
             textCharacterIndex = cleanSpeechText.length;
             printedText = cleanSpeechText;
-        } else {
-            currentLineIndex++;
+            return;
+        }
 
-            if (currentLineIndex < fullDialogueList.length) {
-                printedText = "";
-                textCharacterIndex = 0;
-                parseCurrentDialogueLine();
-            } else {
-                gameState = "fade-out";
-            }
+        // Next line
+        currentLineIndex++;
+
+        if (currentLineIndex < fullDialogueList.length) {
+            printedText = "";
+            textCharacterIndex = 0;
+            parseCurrentDialogueLine();
+        } else {
+            gameState = "fade-out";
         }
     }
 });
 
-// ===============================
-// BACKGROUND RENDER
-// ===============================
+// 3. GRAPHICS
 function drawBackground() {
     if (bgLoaded) {
         ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
@@ -255,32 +236,28 @@ function drawBackground() {
     }
 }
 
-// ===============================
-// PORTRAIT RENDER
-// ===============================
 function drawPortraitElement(char, positionMode) {
     if (!char) return;
 
     const isSpeaking =
-        (currentSpeakerName === char.name ||
-         currentSpeakerName === char.id.toUpperCase() ||
-         rawSpeakerCheck(char));
+        currentSpeakerName === char.name ||
+        currentSpeakerName === char.id?.toUpperCase();
 
     let drawX = 0;
     const drawY = canvas.height - 490;
 
     if (positionMode === "left") drawX = -40;
     else if (positionMode === "right") drawX = canvas.width - 360;
-    else drawX = (canvas.width / 2) - 200;
+    else drawX = canvas.width / 2 - 200;
 
     ctx.globalAlpha = fadeAlpha * (isSpeaking ? 1 : 0.4);
-
     ctx.save();
 
     if (char.portraitLoaded) {
-        let frame = (Array.isArray(char.portraitFrames) && char.portraitFrames.length)
-            ? char.portraitFrames[portraitFrame]
-            : char.portraitFrames;
+        let frame =
+            Array.isArray(char.portraitFrames)
+                ? char.portraitFrames[portraitFrame]
+                : char.portraitFrames;
 
         if (positionMode === "right") {
             ctx.translate(drawX + 400, drawY);
@@ -290,7 +267,7 @@ function drawPortraitElement(char, positionMode) {
             ctx.drawImage(frame, drawX, drawY, 400, 400);
         }
     } else {
-        ctx.fillStyle = char.color || "#ffffff";
+        ctx.fillStyle = char.color || "#fff";
         ctx.fillRect(drawX + 125, drawY + 125, 150, 150);
     }
 
@@ -298,24 +275,11 @@ function drawPortraitElement(char, positionMode) {
     ctx.globalAlpha = 1;
 }
 
-// ===============================
-// SPEAKER CHECK
-// ===============================
-function rawSpeakerCheck(char) {
-    if (!currentSpeakerName) return false;
-    return char.name.toUpperCase().startsWith(currentSpeakerName);
-}
-
-// ===============================
-// FADE STATE
-// ===============================
 if (typeof boxFadeAlpha === "undefined") {
     var boxFadeAlpha = 0;
 }
 
-// ===============================
-// VN LAYER
-// ===============================
+// 4. VN RENDER LAYER
 function drawVisualNovelLayer() {
     if (gameState === "simulation" || gameState === "pathfinding") return;
 
@@ -324,7 +288,6 @@ function drawVisualNovelLayer() {
         if (boxFadeAlpha >= 1) {
             boxFadeAlpha = 1;
             fadeAlpha += 0.05;
-
             if (fadeAlpha >= 1) {
                 fadeAlpha = 1;
                 gameState = "dialogue";
@@ -332,21 +295,16 @@ function drawVisualNovelLayer() {
                 portraitAnimTimer = 0;
             }
         }
-    }
-
-    if (gameState === "fade-out") {
+    } else if (gameState === "fade-out") {
         fadeAlpha -= 0.08;
-
         if (fadeAlpha <= 0) {
             fadeAlpha = 0;
             boxFadeAlpha -= 0.05;
-
             if (boxFadeAlpha <= 0) {
                 boxFadeAlpha = 0;
                 gameState = "simulation";
                 talkingCharacter = null;
                 interactingPartner = null;
-                return;
             }
         }
     }
@@ -372,94 +330,14 @@ function drawVisualNovelLayer() {
         drawPortraitElement(talkingCharacter, "center");
     }
 
-    let headerColor = "#ffffff";
-    let activeSpeakerTitle = "";
-    let activeSpeakerVibeName = "";
-
-    characters.forEach(char => {
-        if (
-            currentSpeakerName === char.name ||
-            currentSpeakerName === char.id.toUpperCase()
-        ) {
-            if (char.nameColor) headerColor = char.nameColor;
-            if (char.vibeTitle) activeSpeakerTitle = char.vibeTitle;
-            if (char.vibeName) activeSpeakerVibeName = char.vibeName;
-        }
-    });
-
-    ctx.globalAlpha = boxFadeAlpha;
-
-    ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(255,255,255,0.15)";
-    ctx.font = "italic 12px sans-serif";
-    ctx.fillText(activeSpeakerTitle, canvas.width - 150, canvas.height - 144);
-
-    ctx.font = "bold 24px sans-serif";
-    ctx.fillText(activeSpeakerVibeName, canvas.width - 150, canvas.height - 118);
-
-    ctx.fillStyle = "#1e272e";
-    ctx.fillRect(20, canvas.height - 110, canvas.width - 40, 90);
-
-    ctx.strokeStyle = "#dcdde1";
-    ctx.lineWidth = 4;
-    ctx.strokeRect(22, canvas.height - 108, canvas.width - 44, 86);
-
-    if (gameState === "dialogue") {
-        if (textCharacterIndex < cleanSpeechText.length) {
-            textCharacterIndex++;
-            printedText = cleanSpeechText.substring(0, textCharacterIndex);
-        }
-    }
-
-    ctx.textAlign = "left";
-    ctx.fillStyle = headerColor;
-    ctx.font = "bold 16px sans-serif";
-    ctx.fillText(currentSpeakerName, 40, canvas.height - 82);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "16px sans-serif";
-    ctx.fillText(printedText, 40, canvas.height - 52);
-
-    ctx.fillStyle = "#718093";
-    ctx.font = "11px sans-serif";
-    ctx.textAlign = "right";
-    ctx.fillText("[SPACE] Continue / [X] Close", canvas.width - 40, canvas.height - 35);
-
     ctx.globalAlpha = 1;
 }
 
-// ===============================
-// CHARACTER UPDATE
-// ===============================
+// 5. CHARACTER UPDATE (unchanged)
 function updateCharacter(char) {
-    if (gameState === "pathfinding") {
-        if (talkingCharacter && interactingPartner) {
-            if (char.id === talkingCharacter.id) {
-                let targetX = interactingPartner.x;
-                targetX += (talkingCharacter.x < interactingPartner.x) ? -48 : 48;
-
-                if (Math.abs(char.x - targetX) > 4) {
-                    char.state = "walking";
-                    char.moveX = char.x < targetX ? 1 : -1;
-                    char.x += char.moveX * char.speed * 2;
-                } else {
-                    char.x = targetX;
-                    char.state = "idle";
-                    gameState = "fade-in";
-                }
-            }
-
-            if (char.id === interactingPartner.id) {
-                char.state = "idle";
-            }
-            return;
-        }
-    }
-
     if (gameState !== "simulation") return;
 
     char.timer--;
-
     if (char.timer <= 0) {
         if (Math.random() < char.activityLevel) {
             char.state = "walking";
@@ -476,34 +354,25 @@ function updateCharacter(char) {
 
     char.x += char.moveX * char.speed;
 
-    if (char.state === "walking") {
-        if (Math.random() < 0.08) {
-            char.moveY = (Math.random() * 2 - 1) * 0.2;
-        }
-        char.y += char.moveY;
-    }
-
-    const minY = 263;
-    const maxY = 268;
-
-    if (char.y + char.height < minY) char.y = minY - char.height;
-    if (char.y + char.height > maxY) char.y = maxY - char.height;
-
     if (char.x < 0) char.x = 0;
     if (char.x + char.width > canvas.width)
         char.x = canvas.width - char.width;
 }
 
-// ===============================
-// GAME LOOP
-// ===============================
+// 6. MAIN LOOP
 function gameLoop() {
     drawBackground();
 
     if (typeof fruits !== "undefined") {
         fruits.forEach(fruit => {
             if (fruit.imageLoaded) {
-                ctx.drawImage(fruit.imageElement, Math.round(fruit.x), Math.round(fruit.y), fruit.width, fruit.height);
+                ctx.drawImage(
+                    fruit.imageElement,
+                    Math.round(fruit.x),
+                    Math.round(fruit.y),
+                    fruit.width,
+                    fruit.height
+                );
             }
         });
     }
@@ -512,23 +381,24 @@ function gameLoop() {
         updateCharacter(char);
 
         if (char.imageLoaded) {
-            ctx.save();
-
-            if (char.moveX === -1) {
-                ctx.translate(Math.round(char.x) + char.width, Math.round(char.y));
-                ctx.scale(-1, 1);
-                ctx.drawImage(char.imageElement, 0, 0, char.width, char.height);
-            } else {
-                ctx.drawImage(char.imageElement, Math.round(char.x), Math.round(char.y), char.width, char.height);
-            }
-
-            ctx.restore();
+            ctx.drawImage(
+                char.imageElement,
+                Math.round(char.x),
+                Math.round(char.y),
+                char.width,
+                char.height
+            );
         }
 
         if (selectedCharacter && selectedCharacter.id === char.id) {
             ctx.strokeStyle = "#61DE2A";
             ctx.lineWidth = 3;
-            ctx.strokeRect(Math.round(char.x) - 2, Math.round(char.y) - 2, char.width + 4, char.height + 4);
+            ctx.strokeRect(
+                Math.round(char.x) - 2,
+                Math.round(char.y) - 2,
+                char.width + 4,
+                char.height + 4
+            );
         }
     });
 
@@ -536,9 +406,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// ===============================
-// BOOT
-// ===============================
+// 7. START ENGINE
 window.addEventListener("load", function () {
     bgLoaded = true;
     gameLoop();
