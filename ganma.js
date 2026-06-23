@@ -9,7 +9,7 @@ const ganmaData = {
 
     // Choose your own coordinates
     x: 536,
-    y: 202,
+    y: 203,
 
     dialogueLines: [
         "The <color=orange><b>Ganma Ganma no Mi</b></color>, a Logia-type <color=orange><b>Devil Fruit</b></color>",
@@ -17,7 +17,7 @@ const ganmaData = {
         "Previous User?",
         "Unknown.",
         "Current User?",
-        "<color=#61DE2A>Fermi</color>."
+        "<color=#61DE2A><b>Fermi</b></color>"
     ],
 
     characterDialogue: {
