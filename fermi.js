@@ -1,72 +1,89 @@
-// FERMI'S PERSONAL DATABOX
+// ===============================
+// FERMI DATABOX (REFURBISHED)
+// ===============================
 const fermiData = {
-    id: "fermi", // Unique code name for relationships
-    name: "FERMI", 
+    id: "fermi",
+    name: "FERMI",
     vibeName: "FERMI",
     vibeTitle: "FLEET ADMIRAL OF THE MARINES",
+
     x: 128,
     y: 203,
     moveX: 0,
     moveY: 0,
+
     width: 64,
     height: 64,
+
     hitbox: {
         x: 17,
         y: 35,
         w: 30,
         h: 30
     },
+
     color: "#ff4757",
+    nameColor: "#61DE2A",
+
     activityLevel: 0.4,
     speed: 0.5,
     state: "idle",
     timer: 0,
-    facingDirection: "right",
-    nameColor: "#61DE2A",
-    
-    // Upgraded multi-line solo dialogue pools
+
+    // ===============================
+    // DIALOGUE (ALL CONVERSATION BLOCKS)
+    // ===============================
     dialogueLines: [
-        // Choice 1: A brief, contemplative observation (like Zero's staring line!)
-        "Maintaining absolute order is exhausting...",
-        
-        // Choice 2: The full multi-line conversation sequence grouped together perfectly!
         [
-            "Are you a new recruit?",
-            "If so you are very... very lost.",
-            "Go back to your assigned living space."
+            "FERMI: Maintaining absolute order is exhausting..."
+        ],
+
+        [
+            "FERMI: Are you a new recruit?",
+            "FERMI: If so you are very... very lost.",
+            "FERMI: Go back to your assigned living space."
         ]
     ],
-    
-    // RELATIONSHIPS DICTIONARY: What happens when interacting with others
+
+    // ===============================
+    // INTERACTIONS
+    // ===============================
     interactions: {
-        "zero": [
-            // Conversation 1 (Wrapped in its own brackets for the engine playlist!)
+        zero: [
             [
-                "FERMI: <i>We eagerly await Zeospark's input</i>",
+                "FERMI: We eagerly await Zeospark's input.",
                 "ZERO: Well hello, Fleet Admiral. Did you need me for something?",
-                "FERMI: <i>We eagerly await Zeospark's input</i>",
+                "FERMI: We eagerly await Zeospark's input.",
                 "ZERO: So... uhhhhh...",
                 "ZERO: nice weather?"
             ]
         ]
     },
-    
+
     imageLoaded: false,
     imageElement: new Image(),
+
     portraitLoaded: false,
-    portraitFrames: [new Image(), new Image(), new Image(), new Image()]
+    portraitFrames: []
 };
 
-// Load Fermi Assets
-fermiData.imageElement.src = "Sprites/Fermiidle1.png"; 
-fermiData.imageElement.onload = function() { fermiData.imageLoaded = true; };
+// ===============================
+// LOAD FERMI ASSETS
+// ===============================
+fermiData.imageElement.src = "Sprites/Fermiidle1.png";
+fermiData.imageElement.onload = function () {
+    fermiData.imageLoaded = true;
+};
 
 let loadedFermiPortraits = 0;
 for (let i = 0; i < 4; i++) {
-    fermiData.portraitFrames[i] = new Image(); // Safe layout initialization
-    fermiData.portraitFrames[i].src = `Sprites/Fermicloseup${i + 1}.png`; 
-    fermiData.portraitFrames[i].onload = function() {
+    fermiData.portraitFrames[i] = new Image();
+    fermiData.portraitFrames[i].src = `Sprites/Fermicloseup${i + 1}.png`;
+
+    fermiData.portraitFrames[i].onload = function () {
         loadedFermiPortraits++;
-        if (loadedFermiPortraits === 4) fermiData.portraitLoaded = true;
+        if (loadedFermiPortraits === 4) {
+            fermiData.portraitLoaded = true;
+        }
     };
 }
