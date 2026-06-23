@@ -1,85 +1,109 @@
-// ZERO'S PERSONAL DATABOX
+// ===============================
+// ZERO DATABOX (REFURBISHED)
+// ===============================
 const zeroData = {
-    id: "zero", 
+    id: "zero",
     name: "ZERO",
     vibeName: "ZERO",
     vibeTitle: "THE WORLD'S FAVORITE",
+
     x: 320,
     y: 204,
     moveX: 0,
     moveY: 0,
+
     width: 64,
     height: 64,
+
     hitbox: {
         x: 17,
         y: 35,
         w: 30,
         h: 30
     },
-    color: "#eed202", // Safety yellow color block
+
+    color: "#eed202",
+    nameColor: "#eed202",
+
     activityLevel: 0.6,
     speed: 0.8,
     state: "idle",
     timer: 0,
-    nameColor: "#eed202", // Safety yellow name text
-    
-    // Zero's standard solo dialogue lines
+
+    // ===============================
+    // DIALOGUE (ALL CONVERSATION BLOCKS)
+    // ===============================
     dialogueLines: [
-        // Choice 1: A simple one-line random text
-        "He's staring...",
-        
-        // Choice 2: A different one-line random text
         [
-            "Heya",
-            "Did you need something?"
+            "ZERO: He's staring..."
         ],
-        
-        // Choice 3: A multi-line story!
+
         [
-            "Well, whats this?",
-            "You're rather displaced.",
-            "Are you certain whatever you're doing is worth it?"
+            "ZERO: Heya.",
+            "ZERO: Did you need something?"
+        ],
+
+        [
+            "ZERO: Well, what's this?",
+            "ZERO: You're rather displaced.",
+            "ZERO: Are you certain whatever you're doing is worth it?"
         ]
     ],
-    
-    // Clicking Zero first, then clicking Fermi
+
+    // ===============================
+    // INTERACTIONS
+    // ===============================
     interactions: {
-        "fermi": [
-            // Conversation 1
+      shinzui: [
+    [
+        "ZERO: Hello, what could I do for- Ah... it's you.",
+        "SHINZUI: We eagerly await Eastie's input.",
+        "ZERO: ...???"
+    ]
+],
+        fermi: [
             [
                 "ZERO: Oi~ Mr Fermi?",
-                "FERMI: <i>We eagerly await Zeospark's input</i>",
+                "FERMI: We eagerly await Zeospark's input.",
                 "ZERO: What? Who's Zeospark?",
-                "FERMI: <i>We eagerly await Zeospark's input</i>",
+                "FERMI: We eagerly await Zeospark's input.",
                 "ZERO: ...???"
             ],
-            // Conversation 2
+
             [
                 "ZERO: So, you think the other Vice Admirals like me at all?",
-                "FERMI: <i>We eagerly await Zeospark's input</i>",
+                "FERMI: We eagerly await Zeospark's input.",
                 "ZERO: Ah right...",
-                "FERMI: <i>We eagerly await Zeospark's input</i>"
-            ]
+                "FERMI: We eagerly await Zeospark's input."
+            ],
+
         ]
     },
-    
+
     imageLoaded: false,
     imageElement: new Image(),
+
     portraitLoaded: false,
     portraitFrames: []
 };
 
-// Load Zero's Overworld Sprite
-zeroData.imageElement.src = "Sprites/Zeroidle1.png"; 
-zeroData.imageElement.onload = function() { zeroData.imageLoaded = true; };
+// ===============================
+// LOAD ZERO ASSETS
+// ===============================
+zeroData.imageElement.src = "Sprites/Zeroidle1.png";
+zeroData.imageElement.onload = function () {
+    zeroData.imageLoaded = true;
+};
 
-// Load Zero's 4 Dialogue Portraits
 let loadedZeroPortraits = 0;
 for (let i = 0; i < 4; i++) {
     zeroData.portraitFrames[i] = new Image();
     zeroData.portraitFrames[i].src = `Sprites/Zerocloseup${i + 1}.png`;
-    zeroData.portraitFrames[i].onload = function() {
+
+    zeroData.portraitFrames[i].onload = function () {
         loadedZeroPortraits++;
-        if (loadedZeroPortraits === 4) zeroData.portraitLoaded = true;
+        if (loadedZeroPortraits === 4) {
+            zeroData.portraitLoaded = true;
+        }
     };
 }
