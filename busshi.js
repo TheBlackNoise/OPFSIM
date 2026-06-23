@@ -8,7 +8,7 @@ const busshiData = {
 
     // MANUAL POSITIONING (YOU CONTROL THIS NOW)
     x: 536,   // ← change freely
-    y: 178,   // ← change freely
+    y: 179,   // ← change freely
 
     dialogueLines: [
         "The <color=orange><b>Busshi Busshi no Mi</b></color>, A Special Paramecia type <color=orange><b>Devil Fruit</b></color>.",
@@ -16,7 +16,7 @@ const busshiData = {
         "Previous User?",
         "Unknown.",
         "Current User?",
-        "<color=#EED202>Acheron</color>"
+        "<color=#EED202><b>Acheron</b></color>"
     ],
 
     // Character-specific inspection dialogue
