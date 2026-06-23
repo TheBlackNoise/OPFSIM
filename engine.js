@@ -33,6 +33,7 @@ function parseCurrentDialogueLine() {
 // ===============================
 // DEBUG HELPER (NEW - SAFE ADD)
 // ===============================
+let activeLinePortrait = null;
 function safeLoadImage(img, path, label) {
     img.onload = function () {
         img.loaded = true;
@@ -170,14 +171,20 @@ if (clickedFruit) {
             interactingPartner = null;
 
             if (clickedChar.dialogueLines && clickedChar.dialogueLines.length > 0) {
-                const randomIndex = Math.floor(Math.random() * clickedChar.dialogueLines.length);
-                let chosenOption = clickedChar.dialogueLines[randomIndex];
 
-                fullDialogueList = Array.isArray(chosenOption)
-                    ? chosenOption
-                    : [chosenOption];
-            } else {
-                fullDialogueList = ["..."];
+    const randomIndex = Math.floor(
+        Math.random() * clickedChar.dialogueLines.length
+    );
+
+    fullDialogueList = clickedChar.dialogueLines[randomIndex];
+
+} else {
+
+    fullDialogueList = [
+        `${clickedChar.name}: ...`
+    ];
+
+
             }
 
             currentLineIndex = 0;
