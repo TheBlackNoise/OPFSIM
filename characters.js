@@ -1,7 +1,7 @@
-// MASTER SYSTEM DIRECTORY LIST
-// When your friends send you their custom code files, add their variable blocks below!
+// MASTER SYSTEM DIRECTORY LISt
 const masterCharacterRoster = [
     fermiData,
+    shinzuiData,
     zeroData
     // [ADD NEW CHARACTER VARIABLES RIGHT HERE SEPARATED BY A COMMA]
     // Example: , alexData, skyData
