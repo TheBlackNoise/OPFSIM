@@ -149,7 +149,7 @@ const shinzuiData = {
             [
                 "ZERO: So, you think the other Vice Admirals like me at all?",
                 "SHINZUI: ...",
-                "ZERO: ...You too huh..."
+                "ZERO: ...You too huh?"
             ]
         ]
     },
