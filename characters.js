@@ -2,6 +2,7 @@
 const masterCharacterRoster = [
     fermiData,
     shinzuiData,
+    sawyerData,
     zeroData
     // [ADD NEW CHARACTER VARIABLES RIGHT HERE SEPARATED BY A COMMA]
     // Example: , alexData, skyData
